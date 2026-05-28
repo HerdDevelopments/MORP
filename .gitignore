@@ -1,0 +1,22 @@
+# MORP — .gitignore
+
+# ── CRITICAL: Never commit private keys ──────────────────────────
+*_private.pem
+*.p8
+*.key
+morp_key.json
+
+# ── Build artifacts ───────────────────────────────────────────────
+.morp-build
+
+# ── Signature files (optional — commit if you want public verification)
+# morp.sig
+
+# ── Node
+node_modules/
+dist/
+*.js.map
+
+# ── OS
+.DS_Store
+Thumbs.db

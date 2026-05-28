@@ -1,0 +1,29 @@
+{
+  "platform": "FiveM",
+  "platform_version": "cfx-server",
+  "protocol_min": "0.1",
+  "protocol_max": "0.2",
+  "modules": [
+    "lifecycle",
+    "events",
+    "player",
+    "state",
+    "exports",
+    "callbacks",
+    "scheduler",
+    "logging",
+    "entity",
+    "vehicle",
+    "ped",
+    "signing"
+  ],
+  "partial": [
+    "signing"
+  ],
+  "notes": {
+    "signing": "Structural validation + hash check implemented. Full Ed25519 crypto requires morp-native module."
+  },
+  "unimplemented": [
+    "registry"
+  ]
+}

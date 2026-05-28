@@ -1,0 +1,16 @@
+{
+  "name": "world-demo",
+  "version": "1.0.0",
+  "protocol": "0.2",
+  "author": "MORP Example",
+  "description": "Demonstrates MORP Entity, Vehicle, and Ped APIs",
+  "license": "MIT",
+  "exports": ["getPlayerVehicleNetId"],
+  "dependencies": ["morp-core"],
+  "scripts": {
+    "server": ["server.lua"],
+    "client": ["client.lua"],
+    "shared": []
+  },
+  "signature": ""
+}

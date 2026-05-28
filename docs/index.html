@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MORP — Modding Open Resource Protocol</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:      #0A0A08;
+      --panel:   #0F0F0C;
+      --border:  #222220;
+      --border2: #333330;
+      --text:    #D4D4C8;
+      --muted:   #555550;
+      --dim:     #333330;
+      --lime:    #C8FF00;
+      --orange:  #FF6B00;
+      --red:     #FF2D2D;
+      --mono:    'IBM Plex Mono', monospace;
+      --display: 'Syne', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.6;
+      cursor: crosshair;
+    }
+
+    /* scan lines */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.03) 2px,
+        rgba(0,0,0,0.03) 4px
+      );
+      pointer-events: none;
+      z-index: 9998;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      height: 52px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(10,10,8,0.96);
+      backdrop-filter: blur(8px);
+    }
+
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .logo {
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: 18px;
+      letter-spacing: 0.04em;
+      color: var(--lime);
+    }
+
+    .logo-sub {
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .nav-links { display: flex; gap: 24px; list-style: none; }
+    .nav-links a {
+      font-size: 11px;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      transition: color 0.15s;
+    }
+    .nav-links a:hover { color: var(--lime); }
+
+    .version-tag {
+      font-size: 10px;
+      padding: 2px 8px;
+      border: 1px solid var(--muted);
+      color: var(--muted);
+      letter-spacing: 0.1em;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      padding: 130px 32px 80px;
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .hero-left {}
+
+    .hero-eyebrow {
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--lime);
+      margin-bottom: 20px;
+      opacity: 0;
+      animation: fadeIn 0.5s 0.1s forwards;
+    }
+
+    h1 {
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: clamp(44px, 5vw, 72px);
+      line-height: 1.0;
+      letter-spacing: -0.02em;
+      margin-bottom: 28px;
+      opacity: 0;
+      animation: fadeIn 0.5s 0.2s forwards;
+    }
+
+    h1 .m { color: var(--lime); }
+    h1 .dim { color: var(--muted); font-weight: 400; }
+
+    .hero-desc {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.9;
+      max-width: 400px;
+      margin-bottom: 40px;
+      opacity: 0;
+      animation: fadeIn 0.5s 0.3s forwards;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      opacity: 0;
+      animation: fadeIn 0.5s 0.4s forwards;
+    }
+
+    .btn {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      text-decoration: none;
+      padding: 11px 24px;
+      border: 1px solid;
+      transition: all 0.15s;
+    }
+
+    .btn-lime {
+      background: var(--lime);
+      border-color: var(--lime);
+      color: #000;
+      font-weight: 700;
+    }
+    .btn-lime:hover { background: #fff; border-color: #fff; }
+
+    .btn-ghost {
+      background: transparent;
+      border-color: var(--border2);
+      color: var(--muted);
+    }
+    .btn-ghost:hover { border-color: var(--lime); color: var(--lime); }
+
+    /* ── TERMINAL PANEL ── */
+    .terminal {
+      background: var(--panel);
+      border: 1px solid var(--border2);
+      opacity: 0;
+      animation: fadeIn 0.6s 0.5s forwards;
+    }
+
+    .term-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .term-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+    }
+    .td-red    { background: #FF5F57; }
+    .td-yellow { background: #FEBC2E; }
+    .td-green  { background: #28C840; }
+
+    .term-title {
+      font-size: 11px;
+      color: var(--muted);
+      margin-left: 8px;
+      letter-spacing: 0.08em;
+    }
+
+    .term-body {
+      padding: 20px 20px;
+      font-size: 12px;
+      line-height: 2.0;
+    }
+
+    .t-prompt { color: var(--lime); }
+    .t-cmd    { color: var(--text); }
+    .t-out    { color: var(--muted); padding-left: 16px; }
+    .t-ok     { color: #28C840; padding-left: 16px; }
+    .t-blank  { display: block; height: 8px; }
+
+    .cursor {
+      display: inline-block;
+      width: 8px; height: 14px;
+      background: var(--lime);
+      vertical-align: text-bottom;
+      animation: blink 1s step-end infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0; }
+    }
+
+    /* ── DIVIDER ── */
+    .full-divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0;
+    }
+
+    /* ── STAT BAR ── */
+    .stat-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .stat {
+      padding: 28px 32px;
+      border-right: 1px solid var(--border);
+    }
+    .stat:last-child { border-right: none; }
+
+    .stat-num {
+      font-family: var(--display);
+      font-size: 36px;
+      font-weight: 800;
+      color: var(--lime);
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    /* ── CONTENT SECTIONS ── */
+    .content {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 80px 32px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+
+    .section-num {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.2em;
+    }
+
+    h2 {
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: clamp(24px, 3vw, 36px);
+      letter-spacing: -0.01em;
+    }
+
+    /* ── FEATURE GRID ── */
+    .feat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      margin-bottom: 80px;
+    }
+
+    .feat {
+      background: var(--panel);
+      padding: 32px 28px;
+      transition: background 0.15s;
+    }
+    .feat:hover { background: #131311; }
+
+    .feat-icon {
+      font-size: 20px;
+      margin-bottom: 16px;
+    }
+
+    .feat-title {
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: 14px;
+      margin-bottom: 10px;
+      color: var(--text);
+    }
+
+    .feat-desc {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.8;
+    }
+
+    .tag {
+      display: inline-block;
+      font-size: 9px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border: 1px solid var(--lime);
+      color: var(--lime);
+      margin-top: 12px;
+    }
+
+    .tag-wip {
+      border-color: var(--orange);
+      color: var(--orange);
+    }
+
+    /* ── CODE COMPARE ── */
+    .compare {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      margin-bottom: 80px;
+    }
+
+    @media (max-width: 700px) {
+      .compare, .feat-grid, .hero { grid-template-columns: 1fr; }
+      .stat-bar { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    .code-pane {
+      background: var(--panel);
+      padding: 0;
+    }
+
+    .code-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .code-header .label { color: var(--muted); }
+    .code-header .file  { color: var(--lime); }
+
+    pre {
+      padding: 24px 20px;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.9;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+
+    .kw  { color: #FF79C6; }
+    .fn  { color: #8BE9FD; }
+    .str { color: #F1FA8C; }
+    .cm  { color: #444440; }
+    .lm  { color: var(--lime); }
+    .or  { color: var(--orange); }
+
+    /* ── COMPLIANCE TABLE ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      margin-bottom: 80px;
+    }
+
+    th {
+      text-align: left;
+      padding: 10px 16px;
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    tr:hover td { background: var(--panel); }
+
+    .dot { display: inline-flex; align-items: center; gap: 8px; }
+    .d { width: 6px; height: 6px; border-radius: 50%; }
+    .d-on  { background: #28C840; box-shadow: 0 0 6px #28C840; }
+    .d-wip { background: var(--orange); box-shadow: 0 0 6px var(--orange); }
+    .d-off { background: var(--muted); }
+
+    /* ── INSTALL ── */
+    .install-row {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      border: 1px solid var(--border2);
+      margin-bottom: 16px;
+      width: fit-content;
+    }
+
+    .install-prefix {
+      padding: 12px 16px;
+      font-size: 11px;
+      color: var(--lime);
+      border-right: 1px solid var(--border2);
+      letter-spacing: 0.1em;
+    }
+
+    .install-cmd {
+      padding: 12px 20px;
+      font-size: 12px;
+      color: var(--text);
+    }
+
+    .install-copy {
+      padding: 12px 14px;
+      border: none;
+      border-left: 1px solid var(--border2);
+      background: transparent;
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      cursor: pointer;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      transition: color 0.15s;
+    }
+    .install-copy:hover { color: var(--lime); }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    footer .fl { font-family: var(--display); font-weight: 800; font-size: 14px; color: var(--lime); }
+    footer .fr { font-size: 11px; color: var(--muted); }
+    footer a { color: var(--muted); text-decoration: none; }
+    footer a:hover { color: var(--lime); }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    .revealed { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-left">
+    <div class="logo">MORP</div>
+    <div class="logo-sub">Modding Open Resource Protocol</div>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#api">API</a></li>
+    <li><a href="#compliance">Compliance</a></li>
+    <li><a href="https://github.com/morp-protocol/morp">GitHub ↗</a></li>
+  </ul>
+  <div class="version-tag">v0.1.0</div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-left">
+    <div class="hero-eyebrow">// Open Protocol — GTA V Modding</div>
+    <h1>
+      <span class="m">M</span>odding<br>
+      <span class="m">O</span>pen<br>
+      <span class="m">R</span>esource<br>
+      <span class="dim"><span class="m">P</span>rotocol</span>
+    </h1>
+    <p class="hero-desc">
+      Platform-agnostic scripting for GTA V multiplayer.<br>
+      Write once. Run anywhere MORP is implemented.<br>
+      No lock-in. No rewrites. No casualties.
+    </p>
+    <div class="hero-actions">
+      <a href="#features" class="btn btn-lime">Get Started</a>
+      <a href="https://github.com/morp-protocol/morp" class="btn btn-ghost">Read the Spec</a>
+    </div>
+  </div>
+
+  <div class="terminal">
+    <div class="term-bar">
+      <div class="term-dot td-red"></div>
+      <div class="term-dot td-yellow"></div>
+      <div class="term-dot td-green"></div>
+      <span class="term-title">morp-cli — bash</span>
+    </div>
+    <div class="term-body">
+      <div><span class="t-prompt">$</span> <span class="t-cmd">npm install -g morp-cli</span></div>
+      <div class="t-ok">✓ morp-cli@0.1.0 installed</div>
+      <span class="t-blank"></span>
+      <div><span class="t-prompt">$</span> <span class="t-cmd">morp init my-server-resource</span></div>
+      <div class="t-ok">✓ Created: my-server-resource</div>
+      <div class="t-out">  morp.json  fxmanifest.lua</div>
+      <div class="t-out">  server.lua  client.lua</div>
+      <span class="t-blank"></span>
+      <div><span class="t-prompt">$</span> <span class="t-cmd">morp validate</span></div>
+      <div class="t-ok">✓ name: "my-server-resource"</div>
+      <div class="t-ok">✓ protocol: "0.1"</div>
+      <div class="t-ok">✓ Scripts: server.lua, client.lua</div>
+      <div class="t-ok">✓ MORP-compliant ✓</div>
+      <span class="t-blank"></span>
+      <div><span class="t-prompt">$</span> <span class="cursor"></span></div>
+    </div>
+  </div>
+</div>
+
+<!-- STAT BAR -->
+<div class="stat-bar reveal">
+  <div class="stat">
+    <div class="stat-num">8</div>
+    <div class="stat-label">Protocol Modules</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">2</div>
+    <div class="stat-label">Adapters (Lua + TS)</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">4</div>
+    <div class="stat-label">CLI Commands</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">0</div>
+    <div class="stat-label">Platform Lock-In</div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<div class="content" id="features">
+  <div class="section-head reveal">
+    <span class="section-num">01 //</span>
+    <h2>What ships with MORP</h2>
+  </div>
+
+  <div class="feat-grid reveal">
+    <div class="feat">
+      <div class="feat-icon">⬡</div>
+      <div class="feat-title">Protocol Spec</div>
+      <p class="feat-desc">RFC-style versioned document. Lifecycle, events, player, state, exports, callbacks, scheduler — all standardized and strictly defined.</p>
+      <span class="tag">v0.1 done</span>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">◈</div>
+      <div class="feat-title">Lua + TypeScript Adapters</div>
+      <p class="feat-desc">Drop-in shims that map MORP's clean API onto FiveM's native calls. Full TypeScript types included. Zero runtime overhead.</p>
+      <span class="tag">v0.1 done</span>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">◎</div>
+      <div class="feat-title">Callback System</div>
+      <p class="feat-desc">Async request/response between server and client. The pattern every FiveM developer rolls manually — now standardized.</p>
+      <span class="tag">v0.1 done</span>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">⬟</div>
+      <div class="feat-title">Resource Signing</div>
+      <p class="feat-desc">Ed25519 keypair signing for resources. Adapter verifies on load. The integrity layer FiveM never shipped.</p>
+      <span class="tag tag-wip">v0.2 wip</span>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">⬢</div>
+      <div class="feat-title">CLI Tooling</div>
+      <p class="feat-desc">init, validate, build, sign. Full developer pipeline from scaffold to signed deployment in four commands.</p>
+      <span class="tag">v0.1 done</span>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">◉</div>
+      <div class="feat-title">Resource Registry</div>
+      <p class="feat-desc">npm-style public registry for MORP resources. morp install. morp publish. The package ecosystem the community was always missing.</p>
+      <span class="tag tag-wip">v0.3 planned</span>
+    </div>
+  </div>
+
+  <!-- API -->
+  <div class="section-head reveal" id="api">
+    <span class="section-num">02 //</span>
+    <h2>One API surface</h2>
+  </div>
+
+  <div class="compare reveal">
+    <div class="code-pane">
+      <div class="code-header">
+        <span class="label">Raw FiveM</span>
+        <span class="file">server.lua</span>
+      </div>
+      <pre><span class="cm">-- FiveM native (platform-coupled)</span>
+<span class="kw">AddEventHandler</span>(<span class="str">'playerConnecting'</span>,
+  <span class="kw">function</span>(name, kick, def)
+    <span class="kw">local</span> src = source
+    def.<span class="fn">defer</span>()
+    <span class="kw">local</span> license =
+      <span class="fn">GetPlayerIdentifier</span>(src, 0)
+    Player(src).state.job = <span class="str">'civ'</span>
+    def.<span class="fn">done</span>()
+  <span class="kw">end</span>
+)
+
+<span class="fn">AddEventHandler</span>(<span class="str">'playerDropped'</span>,
+  <span class="kw">function</span>(reason)
+    <span class="cm">-- different event name</span>
+    <span class="cm">-- different patterns</span>
+  <span class="kw">end</span>
+)</pre>
+    </div>
+    <div class="code-pane">
+      <div class="code-header">
+        <span class="label">MORP</span>
+        <span class="file">server.lua</span>
+      </div>
+      <pre><span class="cm">-- MORP (portable, consistent)</span>
+<span class="lm">MORP</span>.<span class="fn">on</span>(<span class="str">'playerConnect'</span>,
+  <span class="kw">function</span>()
+    <span class="kw">local</span> src  = source
+    <span class="kw">local</span> ids  =
+      <span class="lm">MORP</span>.player.<span class="fn">getIdentifiers</span>(src)
+    <span class="lm">MORP</span>.state.player(src)
+      .<span class="fn">set</span>(<span class="str">'job'</span>, <span class="str">'civ'</span>)
+  <span class="kw">end</span>
+)
+
+<span class="lm">MORP</span>.<span class="fn">on</span>(<span class="str">'playerDisconnect'</span>,
+  <span class="kw">function</span>(reason)
+    <span class="cm">-- same API, any platform</span>
+  <span class="kw">end</span>
+)</pre>
+    </div>
+  </div>
+
+  <!-- COMPLIANCE -->
+  <div class="section-head reveal" id="compliance">
+    <span class="section-num">03 //</span>
+    <h2>Protocol coverage</h2>
+  </div>
+
+  <table class="reveal">
+    <thead>
+      <tr>
+        <th>Module</th>
+        <th>Lua Adapter</th>
+        <th>TS Adapter</th>
+        <th>Spec</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Lifecycle Events</td><td><span class="dot"><span class="d d-on"></span>Done</span></td><td><span class="dot"><span class="d d-on"></span>Done</span></td><td><span class="dot"><span class="d d-on"></span>Done</span></td></tr>
+      <tr><td>Event Bus</td><td><span class="dot"><span class="d d-on"></span>Done</span></td><td><span class="dot"><span class="d d-on"></span>Done</span></td><td><span class="dot"><span class="d d-on"></span>Done</span></td></tr>
+      <tr><td>Player API</td><td><span class="dot"><span class="d d-on"></span>Done</span></td><td><span class="dot"><span class="d d-on"></span>Done</span></td><td><span class="dot"><span class="d d-on"></span>Done</span></td></tr>
+      <tr><td>State / KV</td><td><span class="dot"><span class="d d-on"></span>Done</span></td><td><span class="dot"><span class="d d-on"></span>Done</span></td><td><span class="dot"><span class="d d-on"></span>Done</span></td></tr>
+      <tr><td>Exports / Imports</td><td><span class="dot"><span class="d d-on"></span>Done</span></td><td><span class="dot"><span class="d d-on"></span>Done</span></td><td><span class="dot"><span class="d d-on"></span>Done</span></td></tr>
+      <tr><td>Callbacks</td><td><span class="dot"><span class="d d-on"></span>Done</span></td><td><span class="dot"><span class="d d-on"></span>Done</span></td><td><span class="dot"><span class="d d-on"></span>Done</span></td></tr>
+      <tr><td>Scheduler</td><td><span class="dot"><span class="d d-on"></span>Done</span></td><td><span class="dot"><span class="d d-on"></span>Done</span></td><td><span class="dot"><span class="d d-on"></span>Done</span></td></tr>
+      <tr><td>Resource Signing</td><td><span class="dot"><span class="d d-wip"></span>WIP</span></td><td><span class="dot"><span class="d d-wip"></span>WIP</span></td><td><span class="dot"><span class="d d-wip"></span>WIP</span></td></tr>
+      <tr><td>Entity API</td><td><span class="dot"><span class="d d-wip"></span>WIP</span></td><td><span class="dot"><span class="d d-off"></span>Planned</span></td><td><span class="dot"><span class="d d-wip"></span>WIP</span></td></tr>
+      <tr><td>Vehicle API</td><td><span class="dot"><span class="d d-off"></span>Planned</span></td><td><span class="dot"><span class="d d-off"></span>Planned</span></td><td><span class="dot"><span class="d d-off"></span>Planned</span></td></tr>
+      <tr><td>Registry</td><td><span class="dot"><span class="d d-off"></span>Planned</span></td><td><span class="dot"><span class="d d-off"></span>Planned</span></td><td><span class="dot"><span class="d d-off"></span>Planned</span></td></tr>
+    </tbody>
+  </table>
+
+  <!-- INSTALL -->
+  <div class="section-head reveal">
+    <span class="section-num">04 //</span>
+    <h2>Get started now</h2>
+  </div>
+
+  <div class="reveal">
+    <div class="install-row">
+      <span class="install-prefix">$</span>
+      <span class="install-cmd">npm install -g morp-cli</span>
+      <button class="install-copy" onclick="navigator.clipboard.writeText('npm install -g morp-cli');this.textContent='copied'">copy</button>
+    </div>
+    <div class="install-row">
+      <span class="install-prefix">$</span>
+      <span class="install-cmd">morp init my-resource</span>
+      <button class="install-copy" onclick="navigator.clipboard.writeText('morp init my-resource');this.textContent='copied'">copy</button>
+    </div>
+    <div class="install-row">
+      <span class="install-prefix">$</span>
+      <span class="install-cmd">morp validate</span>
+      <button class="install-copy" onclick="navigator.clipboard.writeText('morp validate');this.textContent='copied'">copy</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="fl">MORP</div>
+  <div class="fr">
+    <a href="https://github.com/morp-protocol/morp">GitHub</a> &nbsp;·&nbsp;
+    <a href="#features">Docs</a> &nbsp;·&nbsp;
+    MIT License &nbsp;·&nbsp; Protocol v0.1.0
+  </div>
+</footer>
+
+<script>
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('revealed'); });
+  }, { threshold: 0.08 });
+
+  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+</script>
+</body>
+</html>

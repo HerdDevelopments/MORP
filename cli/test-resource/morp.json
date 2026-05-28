@@ -1,0 +1,22 @@
+{
+  "name": "test-resource",
+  "version": "1.0.0",
+  "protocol": "0.2",
+  "author": "",
+  "description": "",
+  "license": "MIT",
+  "exports": [],
+  "dependencies": [
+    "morp-core"
+  ],
+  "scripts": {
+    "server": [
+      "server.lua"
+    ],
+    "client": [
+      "client.lua"
+    ],
+    "shared": []
+  },
+  "signature": ""
+}

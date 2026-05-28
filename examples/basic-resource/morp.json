@@ -1,0 +1,24 @@
+{
+  "name": "basic-greeter",
+  "version": "1.0.0",
+  "protocol": "0.1",
+  "author": "MORP Example",
+  "description": "Demonstrates lifecycle, callbacks, exports, scheduler, and state",
+  "license": "MIT",
+  "exports": [
+    "getDisplayName"
+  ],
+  "dependencies": [
+    "morp-core"
+  ],
+  "scripts": {
+    "server": [
+      "server.lua"
+    ],
+    "client": [
+      "client.lua"
+    ],
+    "shared": []
+  },
+  "signature": "d8c0be4a9a78903685aba7573f5c1e01..."
+}

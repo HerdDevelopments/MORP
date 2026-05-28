@@ -1,0 +1,19 @@
+{
+  "name": "morp-cli",
+  "version": "0.1.0",
+  "description": "Modding Open Resource Protocol — Developer Tools",
+  "type": "module",
+  "bin": {
+    "morp": "./src/index.js"
+  },
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "form-data": "^4.0.5",
+    "node-fetch": "^3.3.2"
+  }
+}

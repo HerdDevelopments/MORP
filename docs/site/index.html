@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MORP Docs — Modding Open Resource Protocol</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Azeret+Mono:wght@300;400;500;600;700&family=Clash+Display:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:        #060608;
+      --surface:   #0C0C10;
+      --surface2:  #11111A;
+      --border:    #1A1A26;
+      --border2:   #252535;
+      --text:      #C8C8DC;
+      --muted:     #52526A;
+      --dim:       #2A2A3A;
+      --lime:      #B8FF3C;
+      --blue:      #3C8AFF;
+      --purple:    #9B5FFF;
+      --orange:    #FF7A3C;
+      --red:       #FF3C5A;
+      --mono:      'Azeret Mono', monospace;
+      --display:   'Clash Display', sans-serif;
+      --sidebar-w: 260px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    /* ── SCANLINES ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.02) 3px, rgba(0,0,0,0.02) 4px);
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    a { color: var(--lime); text-decoration: none; }
+    a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+    /* ─────────────────────────────────────────
+       LAYOUT
+    ───────────────────────────────────────── */
+
+    .layout {
+      display: grid;
+      grid-template-columns: var(--sidebar-w) 1fr;
+      grid-template-rows: 52px 1fr;
+      min-height: 100vh;
+    }
+
+    /* ─────────────────────────────────────────
+       TOPBAR
+    ───────────────────────────────────────── */
+
+    .topbar {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(6,6,8,0.9);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .topbar-left { display: flex; align-items: center; gap: 16px; }
+
+    .logo {
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: 17px;
+      letter-spacing: 0.06em;
+      color: var(--lime);
+    }
+
+    .logo-sep { color: var(--muted); margin: 0 4px; }
+
+    .logo-sub {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .topbar-search {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 6px 14px;
+      width: 260px;
+      transition: border-color 0.15s;
+    }
+
+    .topbar-search:focus-within { border-color: var(--lime); }
+    .topbar-search input {
+      background: none;
+      border: none;
+      outline: none;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text);
+      width: 100%;
+    }
+
+    .topbar-search input::placeholder { color: var(--muted); }
+    .topbar-search .search-icon { color: var(--muted); font-size: 11px; }
+
+    .topbar-right { display: flex; align-items: center; gap: 20px; }
+
+    .topbar-link {
+      font-size: 11px;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: 0.08em;
+      transition: color 0.15s;
+    }
+    .topbar-link:hover { color: var(--lime); text-decoration: none; }
+
+    .version-pill {
+      font-size: 10px;
+      padding: 2px 9px;
+      border: 1px solid var(--border2);
+      color: var(--muted);
+      letter-spacing: 0.12em;
+    }
+
+    /* ─────────────────────────────────────────
+       SIDEBAR
+    ───────────────────────────────────────── */
+
+    .sidebar {
+      border-right: 1px solid var(--border);
+      padding: 24px 0;
+      height: calc(100vh - 52px);
+      position: sticky;
+      top: 52px;
+      overflow-y: auto;
+    }
+
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-track { background: transparent; }
+    .sidebar::-webkit-scrollbar-thumb { background: var(--border2); }
+
+    .nav-group { margin-bottom: 28px; }
+
+    .nav-group-label {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 0 20px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-group-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 20px;
+      font-size: 12px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.12s;
+      border-left: 2px solid transparent;
+    }
+
+    .nav-item:hover { color: var(--text); background: var(--surface); }
+    .nav-item.active { color: var(--lime); border-left-color: var(--lime); background: rgba(184,255,60,0.04); }
+
+    .nav-item .nav-badge {
+      margin-left: auto;
+      font-size: 9px;
+      padding: 1px 6px;
+      background: var(--dim);
+      color: var(--muted);
+      letter-spacing: 0.1em;
+    }
+
+    .nav-item .nav-badge.new { background: rgba(184,255,60,0.15); color: var(--lime); }
+
+    /* ─────────────────────────────────────────
+       CONTENT
+    ───────────────────────────────────────── */
+
+    .content {
+      padding: 48px 56px;
+      max-width: 860px;
+    }
+
+    /* Page sections */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ── Hero ── */
+    .page-hero {
+      margin-bottom: 64px;
+      opacity: 0;
+      transform: translateY(16px);
+      animation: fadeUp 0.5s 0.05s forwards;
+    }
+
+    .page-hero .eyebrow {
+      font-size: 10px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--lime);
+      margin-bottom: 14px;
+    }
+
+    .page-hero h1 {
+      font-family: var(--display);
+      font-size: clamp(36px, 5vw, 56px);
+      font-weight: 700;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      margin-bottom: 20px;
+      color: #fff;
+    }
+
+    .page-hero p {
+      font-size: 14px;
+      color: var(--muted);
+      max-width: 520px;
+      line-height: 1.9;
+    }
+
+    /* ── Section ── */
+    .doc-section {
+      margin-bottom: 56px;
+      opacity: 0;
+      transform: translateY(12px);
+    }
+
+    .doc-section.visible {
+      animation: fadeUp 0.45s forwards;
+    }
+
+    h2.section-title {
+      font-family: var(--display);
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: #fff;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    h2.section-title .anchor {
+      font-family: var(--mono);
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 400;
+    }
+
+    .section-desc {
+      color: var(--muted);
+      margin-bottom: 28px;
+      font-size: 13px;
+    }
+
+    h3.sub-title {
+      font-family: var(--display);
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      margin: 28px 0 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    p { margin-bottom: 14px; color: var(--muted); }
+
+    /* ── Code blocks ── */
+    .code-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      margin: 16px 0;
+      position: relative;
+    }
+
+    .code-block .cb-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .cb-lang { color: var(--lime); }
+    .cb-file { color: var(--muted); }
+
+    .cb-copy {
+      background: none;
+      border: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      padding: 2px 8px;
+      cursor: pointer;
+      letter-spacing: 0.1em;
+      transition: all 0.15s;
+    }
+    .cb-copy:hover { color: var(--lime); border-color: var(--lime); }
+
+    pre {
+      padding: 20px 20px;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.9;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    /* Syntax */
+    .kw { color: #C084FC; }
+    .fn { color: #60CBFF; }
+    .str { color: #FDE68A; }
+    .cm { color: #374151; }
+    .lm { color: var(--lime); }
+    .nu { color: #FB923C; }
+    .ty { color: var(--orange); }
+
+    /* ── Inline code ── */
+    code {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      padding: 1px 6px;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--lime);
+    }
+
+    /* ── API table ── */
+    .api-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      margin: 16px 0;
+    }
+
+    .api-table th {
+      text-align: left;
+      padding: 8px 14px;
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .api-table td {
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    .api-table tr:hover td { background: var(--surface); }
+
+    .api-fn { color: var(--lime); font-family: var(--mono); }
+    .api-type { color: var(--blue); font-size: 11px; }
+    .api-desc { color: var(--muted); }
+    .api-side {
+      font-size: 9px;
+      padding: 1px 6px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .side-s { background: rgba(60,138,255,0.12); color: var(--blue); }
+    .side-c { background: rgba(155,95,255,0.12); color: var(--purple); }
+    .side-b { background: rgba(184,255,60,0.1);  color: var(--lime); }
+
+    /* ── Callout ── */
+    .callout {
+      border-left: 3px solid;
+      padding: 14px 18px;
+      margin: 20px 0;
+      font-size: 12px;
+    }
+
+    .callout-info    { border-color: var(--blue);   background: rgba(60,138,255,0.06); }
+    .callout-warn    { border-color: var(--orange);  background: rgba(255,122,60,0.06); }
+    .callout-danger  { border-color: var(--red);     background: rgba(255,60,90,0.06); }
+    .callout-success { border-color: var(--lime);    background: rgba(184,255,60,0.06); }
+
+    .callout-label {
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .callout-info .callout-label    { color: var(--blue); }
+    .callout-warn .callout-label    { color: var(--orange); }
+    .callout-danger .callout-label  { color: var(--red); }
+    .callout-success .callout-label { color: var(--lime); }
+
+    /* ── Quick cards ── */
+    .card-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); margin: 20px 0; }
+    .card { background: var(--surface); padding: 24px 22px; transition: background 0.12s; cursor: pointer; }
+    .card:hover { background: var(--surface2); }
+    .card-icon { font-size: 18px; margin-bottom: 12px; }
+    .card-title { font-family: var(--display); font-weight: 600; font-size: 14px; color: #fff; margin-bottom: 6px; }
+    .card-desc { font-size: 12px; color: var(--muted); line-height: 1.7; }
+
+    /* ── Steps ── */
+    .steps { margin: 20px 0; }
+    .step { display: flex; gap: 18px; margin-bottom: 24px; }
+    .step-num {
+      flex-shrink: 0;
+      width: 28px; height: 28px;
+      background: var(--dim);
+      color: var(--lime);
+      font-size: 11px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .step-body {}
+    .step-title { font-family: var(--display); font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 6px; }
+    .step-desc { font-size: 12px; color: var(--muted); }
+
+    /* ── Breadcrumb ── */
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 32px;
+    }
+    .breadcrumb span { color: var(--dim); }
+
+    /* ── Search results overlay ── */
+    .search-results {
+      position: fixed;
+      top: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 480px;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      z-index: 200;
+      display: none;
+      max-height: 360px;
+      overflow-y: auto;
+    }
+
+    .search-results.visible { display: block; }
+
+    .search-result-item {
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .search-result-item:hover { background: var(--surface2); }
+    .search-result-item:last-child { border-bottom: none; }
+
+    .sr-title { font-size: 13px; color: #fff; margin-bottom: 2px; }
+    .sr-path { font-size: 11px; color: var(--muted); }
+    .sr-match { color: var(--lime); }
+
+    /* ── Anim ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Mobile ── */
+    @media (max-width: 768px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .content { padding: 32px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- ── TOPBAR ─────────────────────────────────────────────── -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="logo">MORP <span class="logo-sep">/</span> <span class="logo-sub">Docs</span></div>
+    </div>
+    <div class="topbar-search">
+      <span class="search-icon">⌕</span>
+      <input type="text" id="searchInput" placeholder="Search docs..." autocomplete="off"/>
+    </div>
+    <div class="topbar-right">
+      <a href="#" class="topbar-link" onclick="navigate('changelog')">Changelog</a>
+      <a href="https://github.com/morp-protocol/morp" class="topbar-link">GitHub ↗</a>
+      <div class="version-pill">v0.2.0</div>
+    </div>
+  </header>
+
+  <!-- ── SEARCH RESULTS ─────────────────────────────────────── -->
+  <div class="search-results" id="searchResults"></div>
+
+  <!-- ── SIDEBAR ────────────────────────────────────────────── -->
+  <nav class="sidebar">
+
+    <div class="nav-group">
+      <div class="nav-group-label">Get Started</div>
+      <div class="nav-item active" onclick="navigate('introduction')">Introduction</div>
+      <div class="nav-item" onclick="navigate('quickstart')">Quick Start</div>
+      <div class="nav-item" onclick="navigate('installation')">Installation</div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-label">Core API</div>
+      <div class="nav-item" onclick="navigate('events')">Events</div>
+      <div class="nav-item" onclick="navigate('player')">Player</div>
+      <div class="nav-item" onclick="navigate('state')">State / KV</div>
+      <div class="nav-item" onclick="navigate('exports')">Exports</div>
+      <div class="nav-item" onclick="navigate('callbacks')">Callbacks</div>
+      <div class="nav-item" onclick="navigate('scheduler')">Scheduler</div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-label">World API</div>
+      <div class="nav-item" onclick="navigate('entity')">Entity <span class="nav-badge new">0.2</span></div>
+      <div class="nav-item" onclick="navigate('vehicle')">Vehicle <span class="nav-badge new">0.2</span></div>
+      <div class="nav-item" onclick="navigate('ped')">Ped <span class="nav-badge new">0.2</span></div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-label">Tooling</div>
+      <div class="nav-item" onclick="navigate('cli')">CLI Reference</div>
+      <div class="nav-item" onclick="navigate('signing')">Resource Signing</div>
+      <div class="nav-item" onclick="navigate('dev')">Dev Server</div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-label">Registry</div>
+      <div class="nav-item" onclick="navigate('registry')">Registry Overview</div>
+      <div class="nav-item" onclick="navigate('publish')">Publishing</div>
+      <div class="nav-item" onclick="navigate('registry-api')">Registry API</div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-label">Reference</div>
+      <div class="nav-item" onclick="navigate('spec')">Protocol Spec</div>
+      <div class="nav-item" onclick="navigate('compat')">Compatibility</div>
+      <div class="nav-item" onclick="navigate('changelog')">Changelog</div>
+    </div>
+
+  </nav>
+
+  <!-- ── CONTENT ────────────────────────────────────────────── -->
+  <main class="content">
+
+    <!-- INTRODUCTION -->
+    <div class="page active" id="page-introduction">
+      <div class="page-hero">
+        <div class="eyebrow">// Documentation</div>
+        <h1>Modding Open<br>Resource Protocol</h1>
+        <p>MORP is a platform-agnostic scripting abstraction for GTA V multiplayer modding. Write resources once against the MORP spec — deploy on any compliant platform.</p>
+      </div>
+
+      <div class="doc-section">
+        <h2 class="section-title">What is MORP? <span class="anchor">#what</span></h2>
+        <p class="section-desc">A portability and standardization layer for GTA V multiplayer scripting.</p>
+
+        <p>The GTA V modding ecosystem has a fragility problem. Platforms rise and die — when a platform gets shut down or abandoned, server owners lose years of work because everything was written against that platform's specific API.</p>
+
+        <p>MORP is an abstraction layer. Your scripts talk to MORP's unified API. MORP adapters translate those calls to whatever the underlying platform needs. When a new platform ships a MORP adapter, your resources work there immediately.</p>
+
+        <div class="card-grid">
+          <div class="card" onclick="navigate('quickstart')">
+            <div class="card-icon">⚡</div>
+            <div class="card-title">Quick Start</div>
+            <div class="card-desc">Up and running in 60 seconds. Scaffold your first MORP resource.</div>
+          </div>
+          <div class="card" onclick="navigate('events')">
+            <div class="card-icon">⬡</div>
+            <div class="card-title">Core API</div>
+            <div class="card-desc">Events, player, state, exports, callbacks, scheduler.</div>
+          </div>
+          <div class="card" onclick="navigate('vehicle')">
+            <div class="card-icon">◈</div>
+            <div class="card-title">World API</div>
+            <div class="card-desc">Entity, vehicle, and ped APIs — new in v0.2.</div>
+          </div>
+          <div class="card" onclick="navigate('registry')">
+            <div class="card-icon">◉</div>
+            <div class="card-title">Registry</div>
+            <div class="card-desc">Publish and install MORP resources like npm packages.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUICK START -->
+    <div class="page" id="page-quickstart">
+      <div class="breadcrumb">Get Started <span>›</span> Quick Start</div>
+      <div class="page-hero">
+        <div class="eyebrow">// Get Started</div>
+        <h1>Quick Start</h1>
+        <p>From zero to a running MORP resource in under 2 minutes.</p>
+      </div>
+
+      <div class="doc-section">
+        <h2 class="section-title">Prerequisites</h2>
+        <div class="callout callout-info">
+          <div class="callout-label">Requirements</div>
+          Node.js 18 or higher. A FiveM server for live testing (optional for CLI steps).
+        </div>
+
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <div class="step-title">Install the CLI</div>
+              <div class="code-block">
+                <div class="cb-header"><span class="cb-lang">bash</span><button class="cb-copy" onclick="copyCode(this)">copy</button></div>
+                <pre>npm install -g morp-cli</pre>
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <div class="step-title">Scaffold a resource</div>
+              <div class="code-block">
+                <div class="cb-header"><span class="cb-lang">bash</span><button class="cb-copy" onclick="copyCode(this)">copy</button></div>
+                <pre>morp init my-resource
+cd my-resource</pre>
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <div class="step-title">Add the adapter to your FiveM manifest</div>
+              <div class="code-block">
+                <div class="cb-header"><span class="cb-lang">lua</span><span class="cb-file">fxmanifest.lua</span><button class="cb-copy" onclick="copyCode(this)">copy</button></div>
+                <pre><span class="fn">fx_version</span> <span class="str">'cerulean'</span>
+<span class="fn">game</span> <span class="str">'gta5'</span>
+
+<span class="cm">-- MORP Protocol 0.2</span>
+<span class="fn">shared_script</span> <span class="str">'@morp-core/adapter/lua/morp_adapter.lua'</span>
+
+<span class="fn">server_script</span> <span class="str">'server.lua'</span>
+<span class="fn">client_script</span> <span class="str">'client.lua'</span></pre>
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <div class="step-title">Write your first handler</div>
+              <div class="code-block">
+                <div class="cb-header"><span class="cb-lang">lua</span><span class="cb-file">server.lua</span><button class="cb-copy" onclick="copyCode(this)">copy</button></div>
+                <pre><span class="lm">MORP</span>.<span class="fn">on</span>(<span class="str">'playerConnect'</span>, <span class="kw">function</span>()
+  <span class="kw">local</span> src  = source
+  <span class="kw">local</span> name = <span class="lm">MORP</span>.player.<span class="fn">getName</span>(src)
+  <span class="lm">MORP</span>.log.<span class="fn">info</span>(<span class="str">'Connected: '</span> .. name)
+  <span class="lm">MORP</span>.state.player(src).<span class="fn">set</span>(<span class="str">'job'</span>, <span class="str">'civilian'</span>)
+<span class="kw">end</span>)</pre>
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">5</div>
+            <div class="step-body">
+              <div class="step-title">Validate and run</div>
+              <div class="code-block">
+                <div class="cb-header"><span class="cb-lang">bash</span><button class="cb-copy" onclick="copyCode(this)">copy</button></div>
+                <pre>morp validate
+morp dev  <span class="cm"># hot reload watcher</span></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EVENTS -->
+    <div class="page" id="page-events">
+      <div class="breadcrumb">Core API <span>›</span> Events</div>
+      <div class="page-hero">
+        <div class="eyebrow">// Core API</div>
+        <h1>Event Bus</h1>
+        <p>MORP's unified event system. Local events, network events, and lifecycle hooks — all through one consistent API.</p>
+      </div>
+
+      <div class="doc-section">
+        <h2 class="section-title">Lifecycle Events</h2>
+        <table class="api-table">
+          <thead><tr><th>Event</th><th>Side</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td class="api-fn">start</td><td><span class="api-side side-b">both</span></td><td class="api-desc">Resource has started</td></tr>
+            <tr><td class="api-fn">stop</td><td><span class="api-side side-b">both</span></td><td class="api-desc">Resource is stopping</td></tr>
+            <tr><td class="api-fn">playerConnect</td><td><span class="api-side side-s">server</span></td><td class="api-desc">Player is connecting (deferrals available)</td></tr>
+            <tr><td class="api-fn">playerDisconnect</td><td><span class="api-side side-s">server</span></td><td class="api-desc">Player has disconnected. <code>source</code> is available</td></tr>
+            <tr><td class="api-fn">playerSpawn</td><td><span class="api-side side-b">both</span></td><td class="api-desc">Player spawned into world</td></tr>
+            <tr><td class="api-fn">clientReady</td><td><span class="api-side side-c">client</span></td><td class="api-desc">Client-side scripts fully loaded</td></tr>
+          </tbody>
+        </table>
+
+        <h3 class="sub-title">Network Events</h3>
+        <table class="api-table">
+          <thead><tr><th>Function</th><th>Side</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td class="api-fn">MORP.on(event, fn)</td><td><span class="api-side side-b">both</span></td><td class="api-desc">Listen to an event</td></tr>
+            <tr><td class="api-fn">MORP.off(event, fn)</td><td><span class="api-side side-b">both</span></td><td class="api-desc">Remove an event listener</td></tr>
+            <tr><td class="api-fn">MORP.emit(event, ...)</td><td><span class="api-side side-b">both</span></td><td class="api-desc">Trigger a local event</td></tr>
+            <tr><td class="api-fn">MORP.emitServer(event, ...)</td><td><span class="api-side side-c">client</span></td><td class="api-desc">Send event to server</td></tr>
+            <tr><td class="api-fn">MORP.emitClient(player, event, ...)</td><td><span class="api-side side-s">server</span></td><td class="api-desc">Send event to specific client</td></tr>
+            <tr><td class="api-fn">MORP.emitAllClients(event, ...)</td><td><span class="api-side side-s">server</span></td><td class="api-desc">Broadcast to all clients</td></tr>
+            <tr><td class="api-fn">MORP.emitAllClientsExcept(player, event, ...)</td><td><span class="api-side side-s">server</span></td><td class="api-desc">Broadcast excluding one player</td></tr>
+          </tbody>
+        </table>
+
+        <div class="code-block">
+          <div class="cb-header"><span class="cb-lang">lua</span><span class="cb-file">example</span><button class="cb-copy" onclick="copyCode(this)">copy</button></div>
+          <pre><span class="cm">-- Server: listen and respond</span>
+<span class="lm">MORP</span>.<span class="fn">on</span>(<span class="str">'myres:requestData'</span>, <span class="kw">function</span>()
+  <span class="kw">local</span> src = source
+  <span class="lm">MORP</span>.<span class="fn">emitClient</span>(src, <span class="str">'myres:data'</span>, { score = <span class="nu">100</span> })
+<span class="kw">end</span>)
+
+<span class="cm">-- Client: request then handle</span>
+<span class="lm">MORP</span>.<span class="fn">on</span>(<span class="str">'clientReady'</span>, <span class="kw">function</span>()
+  <span class="lm">MORP</span>.<span class="fn">emitServer</span>(<span class="str">'myres:requestData'</span>)
+<span class="kw">end</span>)
+
+<span class="lm">MORP</span>.<span class="fn">on</span>(<span class="str">'myres:data'</span>, <span class="kw">function</span>(data)
+  <span class="lm">MORP</span>.log.<span class="fn">info</span>(<span class="str">'Score: '</span> .. data.score)
+<span class="kw">end</span>)</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- VEHICLE -->
+    <div class="page" id="page-vehicle">
+      <div class="breadcrumb">World API <span>›</span> Vehicle</div>
+      <div class="page-hero">
+        <div class="eyebrow">// World API — v0.2</div>
+        <h1>Vehicle API</h1>
+        <p>Spawn, modify, and query vehicles. Extends the base Entity API.</p>
+      </div>
+
+      <div class="doc-section">
+        <h2 class="section-title">Spawning</h2>
+        <div class="callout callout-info">
+          <div class="callout-label">Client-side only</div>
+          Vehicle spawning is client-side. Notify the server via <code>MORP.emitServer</code> with the network ID for server-side tracking.
+        </div>
+
+        <div class="code-block">
+          <div class="cb-header"><span class="cb-lang">lua</span><span class="cb-file">client.lua</span><button class="cb-copy" onclick="copyCode(this)">copy</button></div>
+          <pre><span class="kw">local</span> hash   = <span class="fn">GetHashKey</span>(<span class="str">'sultan'</span>)
+<span class="kw">local</span> coords = <span class="lm">MORP</span>.player.<span class="fn">getCoords</span>()
+
+<span class="lm">MORP</span>.entity.<span class="fn">loadModel</span>(hash, <span class="kw">function</span>()
+  <span class="kw">local</span> veh = <span class="lm">MORP</span>.vehicle.<span class="fn">spawn</span>(hash, coords, <span class="nu">0.0</span>, {
+    plate    = <span class="str">'MORP01'</span>,
+    color    = { primary = <span class="nu">27</span>, secondary = <span class="nu">0</span> },
+    fuel     = <span class="nu">100.0</span>,
+    engineOn = <span class="kw">false</span>,
+  })
+
+  <span class="lm">MORP</span>.vehicle.<span class="fn">setNeonEnabled</span>(veh, <span class="kw">true</span>, <span class="kw">true</span>, <span class="kw">false</span>, <span class="kw">false</span>)
+  <span class="lm">MORP</span>.vehicle.<span class="fn">setNeonColor</span>(veh, <span class="nu">0</span>, <span class="nu">255</span>, <span class="nu">128</span>)
+<span class="kw">end</span>)</pre>
+        </div>
+
+        <h3 class="sub-title">State & Performance</h3>
+        <table class="api-table">
+          <thead><tr><th>Function</th><th>Returns</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td class="api-fn">vehicle.getSpeed(veh)</td><td class="api-type">number</td><td class="api-desc">Speed in m/s</td></tr>
+            <tr><td class="api-fn">vehicle.getSpeedKph(veh)</td><td class="api-type">number</td><td class="api-desc">Speed in km/h</td></tr>
+            <tr><td class="api-fn">vehicle.getSpeedMph(veh)</td><td class="api-type">number</td><td class="api-desc">Speed in mph</td></tr>
+            <tr><td class="api-fn">vehicle.getFuel(veh)</td><td class="api-type">number</td><td class="api-desc">Fuel level 0–100</td></tr>
+            <tr><td class="api-fn">vehicle.setFuel(veh, level)</td><td class="api-type">void</td><td class="api-desc">Set fuel 0–100</td></tr>
+            <tr><td class="api-fn">vehicle.getEngineHealth(veh)</td><td class="api-type">number</td><td class="api-desc">Engine health 0–1000</td></tr>
+            <tr><td class="api-fn">vehicle.repair(veh)</td><td class="api-type">void</td><td class="api-desc">Full repair — engine, body, tyres</td></tr>
+            <tr><td class="api-fn">vehicle.explode(veh)</td><td class="api-type">void</td><td class="api-desc">Networked explosion</td></tr>
+            <tr><td class="api-fn">vehicle.isLocked(veh)</td><td class="api-type">bool</td><td class="api-desc">Check lock state</td></tr>
+            <tr><td class="api-fn">vehicle.setLocked(veh, state)</td><td class="api-type">void</td><td class="api-desc">0=none 1=unlocked 2=locked</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CLI -->
+    <div class="page" id="page-cli">
+      <div class="breadcrumb">Tooling <span>›</span> CLI Reference</div>
+      <div class="page-hero">
+        <div class="eyebrow">// Tooling</div>
+        <h1>CLI Reference</h1>
+        <p>All commands available in <code>morp-cli</code>.</p>
+      </div>
+
+      <div class="doc-section">
+        <h2 class="section-title">Resource Commands</h2>
+        <table class="api-table">
+          <thead><tr><th>Command</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td class="api-fn">morp init &lt;name&gt;</td><td class="api-desc">Scaffold a new MORP resource with morp.json, fxmanifest.lua, server.lua, client.lua</td></tr>
+            <tr><td class="api-fn">morp validate [path]</td><td class="api-desc">Validate a resource against the MORP spec. Checks manifest, scripts, signature</td></tr>
+            <tr><td class="api-fn">morp build [path]</td><td class="api-desc">Hash all declared files and write <code>.morp-build</code> manifest</td></tr>
+            <tr><td class="api-fn">morp dev [path] [--port=7700]</td><td class="api-desc">Hot reload watcher with SSE server for live change notifications</td></tr>
+          </tbody>
+        </table>
+
+        <h2 class="section-title">Signing Commands</h2>
+        <table class="api-table">
+          <thead><tr><th>Command</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td class="api-fn">morp keygen [outDir]</td><td class="api-desc">Generate Ed25519 keypair. Outputs morp_private.pem + morp_public.pem</td></tr>
+            <tr><td class="api-fn">morp sign --key &lt;pem&gt; [path]</td><td class="api-desc">Sign a built resource. Requires <code>.morp-build</code>. Outputs <code>morp.sig</code></td></tr>
+            <tr><td class="api-fn">morp verify --key &lt;pem&gt; [path]</td><td class="api-desc">Verify signature. Recomputes root hash and checks Ed25519 signature</td></tr>
+          </tbody>
+        </table>
+
+        <h2 class="section-title">Registry Commands</h2>
+        <table class="api-table">
+          <thead><tr><th>Command</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td class="api-fn">morp login &lt;username&gt;</td><td class="api-desc">Authenticate with registry. Token saved to <code>~/.morp-token</code></td></tr>
+            <tr><td class="api-fn">morp whoami</td><td class="api-desc">Show current authenticated user</td></tr>
+            <tr><td class="api-fn">morp publish [path]</td><td class="api-desc">Publish resource to registry. Requires login and a built resource</td></tr>
+            <tr><td class="api-fn">morp install &lt;pkg&gt;[@version]</td><td class="api-desc">Install a resource from registry. Defaults to <code>latest</code></td></tr>
+            <tr><td class="api-fn">morp search &lt;query&gt;</td><td class="api-desc">Search registry by name or description</td></tr>
+          </tbody>
+        </table>
+
+        <h3 class="sub-title">Environment Variables</h3>
+        <table class="api-table">
+          <thead><tr><th>Variable</th><th>Default</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td class="api-fn">MORP_REGISTRY</td><td class="api-type">http://localhost:3000</td><td class="api-desc">Registry URL</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SIGNING -->
+    <div class="page" id="page-signing">
+      <div class="breadcrumb">Tooling <span>›</span> Resource Signing</div>
+      <div class="page-hero">
+        <div class="eyebrow">// Security</div>
+        <h1>Resource Signing</h1>
+        <p>Ed25519 cryptographic signing for MORP resources. Tamper detection and publisher verification.</p>
+      </div>
+
+      <div class="doc-section">
+        <h2 class="section-title">How it works</h2>
+        <div class="callout callout-success">
+          <div class="callout-label">Algorithm</div>
+          Ed25519 (RFC 8032) — the same algorithm used by SSH, WireGuard, and Signal.
+        </div>
+
+        <p>Signing creates a cryptographic proof that a resource came from you and hasn't been modified. The adapter can verify this on load.</p>
+
+        <h3 class="sub-title">Full workflow</h3>
+        <div class="code-block">
+          <div class="cb-header"><span class="cb-lang">bash</span><button class="cb-copy" onclick="copyCode(this)">copy</button></div>
+          <pre><span class="cm"># 1. Generate keypair (do this once)</span>
+morp keygen keys/
+
+<span class="cm"># 2. Hash all files</span>
+morp build
+
+<span class="cm"># 3. Sign with your private key</span>
+morp sign --key keys/morp_private.pem
+
+<span class="cm"># 4. Verify (test before distributing)</span>
+morp verify --key keys/morp_public.pem</pre>
+        </div>
+
+        <div class="callout callout-danger">
+          <div class="callout-label">Security</div>
+          Never commit <code>morp_private.pem</code> to version control. Add it to <code>.gitignore</code>. Loss of the private key means you cannot sign future updates under the same identity.
+        </div>
+      </div>
+    </div>
+
+    <!-- DEV SERVER -->
+    <div class="page" id="page-dev">
+      <div class="breadcrumb">Tooling <span>›</span> Dev Server</div>
+      <div class="page-hero">
+        <div class="eyebrow">// Tooling</div>
+        <h1>Dev Server</h1>
+        <p>Hot reload watcher with SSE for live change detection during development.</p>
+      </div>
+
+      <div class="doc-section">
+        <h2 class="section-title">Usage</h2>
+        <div class="code-block">
+          <div class="cb-header"><span class="cb-lang">bash</span><button class="cb-copy" onclick="copyCode(this)">copy</button></div>
+          <pre>cd my-resource
+morp dev               <span class="cm"># default port 7700</span>
+morp dev . --port=8080 <span class="cm"># custom port</span></pre>
+        </div>
+
+        <h3 class="sub-title">SSE Events</h3>
+        <p>Connect to <code>http://localhost:7700/events</code> to receive file change notifications as Server-Sent Events.</p>
+
+        <div class="code-block">
+          <div class="cb-header"><span class="cb-lang">js</span><span class="cb-file">FiveM NUI or browser</span><button class="cb-copy" onclick="copyCode(this)">copy</button></div>
+          <pre><span class="kw">const</span> es = <span class="kw">new</span> <span class="fn">EventSource</span>(<span class="str">'http://localhost:7700/events'</span>)
+es.<span class="fn">onmessage</span> = (e) => {
+  <span class="kw">const</span> data = JSON.<span class="fn">parse</span>(e.data)
+  console.<span class="fn">log</span>(<span class="str">'Changed:'</span>, data.file, data.ts)
+}</pre>
+        </div>
+
+        <h3 class="sub-title">Status endpoint</h3>
+        <p><code>GET http://localhost:7700/status</code> returns current watch state as JSON.</p>
+      </div>
+    </div>
+
+    <!-- REGISTRY -->
+    <div class="page" id="page-registry">
+      <div class="breadcrumb">Registry <span>›</span> Overview</div>
+      <div class="page-hero">
+        <div class="eyebrow">// Registry</div>
+        <h1>Resource Registry</h1>
+        <p>The npm-style package registry for MORP-compliant FiveM resources.</p>
+      </div>
+
+      <div class="doc-section">
+        <h2 class="section-title">Self-hosting</h2>
+        <div class="code-block">
+          <div class="cb-header"><span class="cb-lang">bash</span><button class="cb-copy" onclick="copyCode(this)">copy</button></div>
+          <pre>cd registry
+npm install
+node src/server.js
+<span class="cm"># Running at http://localhost:3000</span></pre>
+        </div>
+
+        <h3 class="sub-title">Environment</h3>
+        <table class="api-table">
+          <thead><tr><th>Variable</th><th>Default</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td class="api-fn">PORT</td><td class="api-type">3000</td><td class="api-desc">HTTP port</td></tr>
+            <tr><td class="api-fn">MORP_DB_PATH</td><td class="api-type">./data/registry.db</td><td class="api-desc">SQLite database path</td></tr>
+            <tr><td class="api-fn">MORP_STORAGE_PATH</td><td class="api-type">./data/tarballs</td><td class="api-desc">Tarball storage directory</td></tr>
+            <tr><td class="api-fn">MORP_JWT_SECRET</td><td class="api-type">dev-secret</td><td class="api-desc">JWT signing secret — change in production</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CHANGELOG -->
+    <div class="page" id="page-changelog">
+      <div class="breadcrumb">Reference <span>›</span> Changelog</div>
+      <div class="page-hero">
+        <div class="eyebrow">// Reference</div>
+        <h1>Changelog</h1>
+      </div>
+
+      <div class="doc-section">
+        <h2 class="section-title">v0.2.0 <span class="anchor">#latest</span></h2>
+        <p class="section-desc">Current release</p>
+
+        <div class="callout callout-success">
+          <div class="callout-label">New</div>
+          Entity API (§12), Vehicle API (§13), Ped API (§14) — full world scripting coverage.
+        </div>
+        <div class="callout callout-success">
+          <div class="callout-label">New</div>
+          Real Ed25519 resource signing via <code>morp keygen</code> / <code>morp sign</code> / <code>morp verify</code>.
+        </div>
+        <div class="callout callout-success">
+          <div class="callout-label">New</div>
+          Registry backend — publish, install, search, auth, download tracking.
+        </div>
+        <div class="callout callout-success">
+          <div class="callout-label">New</div>
+          <code>morp dev</code> — hot reload watcher with SSE server.
+        </div>
+        <div class="callout callout-success">
+          <div class="callout-label">New</div>
+          Full documentation site.
+        </div>
+
+        <h2 class="section-title" style="margin-top:48px">v0.1.0</h2>
+        <p class="section-desc">Initial draft</p>
+        <p>Lifecycle events, event bus, player API, state/KV, exports/imports, callbacks, scheduler, logging. Lua + TypeScript adapters. CLI (init, validate, build, sign). Protocol specification.</p>
+      </div>
+    </div>
+
+    <!-- Stub pages for remaining nav items -->
+    <div class="page" id="page-installation">
+      <div class="breadcrumb">Get Started <span>›</span> Installation</div>
+      <div class="page-hero"><div class="eyebrow">// Get Started</div><h1>Installation</h1><p>Add MORP to an existing FiveM server.</p></div>
+      <div class="doc-section">
+        <h2 class="section-title">Add morp-core to your server</h2>
+        <div class="code-block"><div class="cb-header"><span class="cb-lang">bash</span><button class="cb-copy" onclick="copyCode(this)">copy</button></div><pre><span class="cm"># Clone the repo into your resources folder</span>
+git clone https://github.com/morp-protocol/morp morp-core</pre></div>
+        <div class="code-block"><div class="cb-header"><span class="cb-lang">cfg</span><span class="cb-file">server.cfg</span><button class="cb-copy" onclick="copyCode(this)">copy</button></div><pre>ensure morp-core
+set MORP_AUTO_VERIFY <span class="str">"true"</span>
+set MORP_DEBUG <span class="str">"false"</span></pre></div>
+      </div>
+    </div>
+
+    <div class="page" id="page-player"><div class="breadcrumb">Core API <span>›</span> Player</div><div class="page-hero"><div class="eyebrow">// Core API</div><h1>Player API</h1><p>Server and client-side player access.</p></div><div class="doc-section"><h2 class="section-title">Server-side</h2><table class="api-table"><thead><tr><th>Function</th><th>Returns</th><th>Description</th></tr></thead><tbody><tr><td class="api-fn">MORP.player.getName(src)</td><td class="api-type">string</td><td class="api-desc">Display name</td></tr><tr><td class="api-fn">MORP.player.getId(src)</td><td class="api-type">number</td><td class="api-desc">Source number</td></tr><tr><td class="api-fn">MORP.player.getPing(src)</td><td class="api-type">number</td><td class="api-desc">Ping in ms</td></tr><tr><td class="api-fn">MORP.player.getIdentifiers(src)</td><td class="api-type">table</td><td class="api-desc">steam, license, discord, ip</td></tr><tr><td class="api-fn">MORP.player.getAll()</td><td class="api-type">table</td><td class="api-desc">All connected source numbers</td></tr><tr><td class="api-fn">MORP.player.kick(src, reason)</td><td class="api-type">void</td><td class="api-desc">Kick a player</td></tr><tr><td class="api-fn">MORP.player.getBucket(src)</td><td class="api-type">number</td><td class="api-desc">Routing bucket</td></tr><tr><td class="api-fn">MORP.player.setBucket(src, n)</td><td class="api-type">void</td><td class="api-desc">Set routing bucket</td></tr></tbody></table><h2 class="section-title">Client-side</h2><table class="api-table"><thead><tr><th>Function</th><th>Returns</th><th>Description</th></tr></thead><tbody><tr><td class="api-fn">MORP.player.local_()</td><td class="api-type">number</td><td class="api-desc">Local player ID</td></tr><tr><td class="api-fn">MORP.player.getPed()</td><td class="api-type">number</td><td class="api-desc">Player ped handle</td></tr><tr><td class="api-fn">MORP.player.getCoords()</td><td class="api-type">vector3</td><td class="api-desc">World position</td></tr><tr><td class="api-fn">MORP.player.getHeading()</td><td class="api-type">number</td><td class="api-desc">Heading in degrees</td></tr></tbody></table></div></div>
+
+    <div class="page" id="page-state"><div class="breadcrumb">Core API <span>›</span> State</div><div class="page-hero"><div class="eyebrow">// Core API</div><h1>State / KV</h1><p>Shared key-value storage with automatic replication.</p></div><div class="doc-section"><h2 class="section-title">Global State</h2><div class="code-block"><div class="cb-header"><span class="cb-lang">lua</span><button class="cb-copy" onclick="copyCode(this)">copy</button></div><pre><span class="lm">MORP</span>.state.<span class="fn">set</span>(<span class="str">'server:motd'</span>, <span class="str">'Welcome!'</span>)
+<span class="lm">MORP</span>.state.<span class="fn">get</span>(<span class="str">'server:motd'</span>)
+<span class="lm">MORP</span>.state.<span class="fn">delete</span>(<span class="str">'server:motd'</span>)</pre></div><h2 class="section-title">Player State</h2><div class="code-block"><div class="cb-header"><span class="cb-lang">lua</span><button class="cb-copy" onclick="copyCode(this)">copy</button></div><pre><span class="lm">MORP</span>.state.player(src).<span class="fn">set</span>(<span class="str">'job'</span>, <span class="str">'police'</span>)
+<span class="lm">MORP</span>.state.player(src).<span class="fn">get</span>(<span class="str">'job'</span>)</pre></div></div></div>
+
+    <div class="page" id="page-exports"><div class="breadcrumb">Core API <span>›</span> Exports</div><div class="page-hero"><div class="eyebrow">// Core API</div><h1>Exports / Imports</h1><p>Cross-resource function sharing.</p></div><div class="doc-section"><div class="code-block"><div class="cb-header"><span class="cb-lang">lua</span><button class="cb-copy" onclick="copyCode(this)">copy</button></div><pre><span class="cm">-- Declare an export</span>
+<span class="lm">MORP</span>.<span class="fn">export</span>(<span class="str">'getJob'</span>, <span class="kw">function</span>(src)
+  <span class="kw">return</span> <span class="lm">MORP</span>.state.player(src).<span class="fn">get</span>(<span class="str">'job'</span>)
+<span class="kw">end</span>)
+
+<span class="cm">-- Consume from another resource</span>
+<span class="kw">local</span> getJob = <span class="lm">MORP</span>.<span class="fn">import</span>(<span class="str">'jobs'</span>, <span class="str">'getJob'</span>)
+<span class="kw">local</span> job = getJob(src)</pre></div></div></div>
+
+    <div class="page" id="page-callbacks"><div class="breadcrumb">Core API <span>›</span> Callbacks</div><div class="page-hero"><div class="eyebrow">// Core API</div><h1>Callbacks</h1><p>Async request/response between server and client.</p></div><div class="doc-section"><div class="code-block"><div class="cb-header"><span class="cb-lang">lua</span><button class="cb-copy" onclick="copyCode(this)">copy</button></div><pre><span class="cm">-- Server: register</span>
+<span class="lm">MORP</span>.callback.<span class="fn">register</span>(<span class="str">'myres:getData'</span>, <span class="kw">function</span>(src, cb, arg)
+  cb({ value = arg * <span class="nu">2</span> })
+<span class="kw">end</span>)
+
+<span class="cm">-- Client: trigger</span>
+<span class="lm">MORP</span>.callback.<span class="fn">trigger</span>(<span class="str">'myres:getData'</span>, <span class="kw">function</span>(data)
+  <span class="lm">MORP</span>.log.<span class="fn">info</span>(data.value)
+<span class="kw">end</span>, <span class="nu">21</span>)</pre></div></div></div>
+
+    <div class="page" id="page-scheduler"><div class="breadcrumb">Core API <span>›</span> Scheduler</div><div class="page-hero"><div class="eyebrow">// Core API</div><h1>Scheduler</h1><p>Timers and tick management.</p></div><div class="doc-section"><table class="api-table"><thead><tr><th>Function</th><th>Returns</th><th>Description</th></tr></thead><tbody><tr><td class="api-fn">MORP.every(ms, fn)</td><td class="api-type">timerId</td><td class="api-desc">Repeating timer</td></tr><tr><td class="api-fn">MORP.after(ms, fn)</td><td class="api-type">timerId</td><td class="api-desc">One-shot delay</td></tr><tr><td class="api-fn">MORP.nextTick(fn)</td><td class="api-type">void</td><td class="api-desc">Next frame</td></tr><tr><td class="api-fn">MORP.cancel(id)</td><td class="api-type">void</td><td class="api-desc">Cancel a timer</td></tr></tbody></table></div></div>
+
+    <div class="page" id="page-entity"><div class="breadcrumb">World API <span>›</span> Entity</div><div class="page-hero"><div class="eyebrow">// World API — v0.2</div><h1>Entity API</h1><p>Base entity operations — create, transform, attach, network.</p></div><div class="doc-section"><table class="api-table"><thead><tr><th>Function</th><th>Returns</th><th>Description</th></tr></thead><tbody><tr><td class="api-fn">entity.create(hash, coords, heading)</td><td class="api-type">handle</td><td class="api-desc">Create a world object (client)</td></tr><tr><td class="api-fn">entity.delete(ent)</td><td class="api-type">void</td><td class="api-desc">Delete entity</td></tr><tr><td class="api-fn">entity.getCoords(ent)</td><td class="api-type">vector3</td><td class="api-desc">World position</td></tr><tr><td class="api-fn">entity.setCoords(ent, x, y, z)</td><td class="api-type">void</td><td class="api-desc">Teleport entity</td></tr><tr><td class="api-fn">entity.getHealth(ent)</td><td class="api-type">number</td><td class="api-desc">Entity health</td></tr><tr><td class="api-fn">entity.attach(ent, target, bone, ...)</td><td class="api-type">void</td><td class="api-desc">Attach to another entity</td></tr><tr><td class="api-fn">entity.getNetId(ent)</td><td class="api-type">number</td><td class="api-desc">Network ID</td></tr><tr><td class="api-fn">entity.getOwner(ent)</td><td class="api-type">source</td><td class="api-desc">Owner player source (server)</td></tr><tr><td class="api-fn">entity.loadModel(hash, cb)</td><td class="api-type">void</td><td class="api-desc">Async model load with callback</td></tr></tbody></table></div></div>
+
+    <div class="page" id="page-ped"><div class="breadcrumb">World API <span>›</span> Ped</div><div class="page-hero"><div class="eyebrow">// World API — v0.2</div><h1>Ped API</h1><p>NPC spawning, weapons, tasks, animations, and appearance.</p></div><div class="doc-section"><div class="code-block"><div class="cb-header"><span class="cb-lang">lua</span><button class="cb-copy" onclick="copyCode(this)">copy</button></div><pre><span class="kw">local</span> npc = <span class="lm">MORP</span>.ped.<span class="fn">spawn</span>(<span class="fn">GetHashKey</span>(<span class="str">'a_m_y_business_01'</span>), coords, <span class="nu">0.0</span>, {
+  invincible = <span class="kw">true</span>, freeze = <span class="kw">false</span>,
+})
+<span class="lm">MORP</span>.ped.<span class="fn">giveWeapon</span>(npc, <span class="fn">GetHashKey</span>(<span class="str">'WEAPON_PISTOL'</span>), <span class="nu">50</span>, <span class="kw">false</span>)
+<span class="lm">MORP</span>.ped.task.<span class="fn">followEntity</span>(npc, <span class="lm">MORP</span>.player.<span class="fn">getPed</span>(), <span class="nu">2.0</span>)</pre></div></div></div>
+
+    <div class="page" id="page-publish"><div class="breadcrumb">Registry <span>›</span> Publishing</div><div class="page-hero"><div class="eyebrow">// Registry</div><h1>Publishing</h1></div><div class="doc-section"><div class="steps"><div class="step"><div class="step-num">1</div><div class="step-body"><div class="step-title">Login</div><div class="code-block"><div class="cb-header"><span class="cb-lang">bash</span><button class="cb-copy" onclick="copyCode(this)">copy</button></div><pre>morp login yourusername</pre></div></div></div><div class="step"><div class="step-num">2</div><div class="step-body"><div class="step-title">Build and sign</div><div class="code-block"><div class="cb-header"><span class="cb-lang">bash</span><button class="cb-copy" onclick="copyCode(this)">copy</button></div><pre>morp build
+morp sign --key keys/morp_private.pem</pre></div></div></div><div class="step"><div class="step-num">3</div><div class="step-body"><div class="step-title">Publish</div><div class="code-block"><div class="cb-header"><span class="cb-lang">bash</span><button class="cb-copy" onclick="copyCode(this)">copy</button></div><pre>morp publish</pre></div></div></div></div></div></div>
+
+    <div class="page" id="page-registry-api"><div class="breadcrumb">Registry <span>›</span> Registry API</div><div class="page-hero"><div class="eyebrow">// Registry</div><h1>Registry API</h1><p>REST API for the MORP registry server.</p></div><div class="doc-section"><table class="api-table"><thead><tr><th>Endpoint</th><th>Method</th><th>Description</th></tr></thead><tbody><tr><td class="api-fn">/packages</td><td class="api-type">GET</td><td class="api-desc">Search packages — ?q= &tag= &author=</td></tr><tr><td class="api-fn">/packages/:name</td><td class="api-type">GET</td><td class="api-desc">Package info + all versions</td></tr><tr><td class="api-fn">/packages/:name/:version</td><td class="api-type">GET</td><td class="api-desc">Specific version metadata</td></tr><tr><td class="api-fn">/packages/:name/:version/download</td><td class="api-type">GET</td><td class="api-desc">Download tarball</td></tr><tr><td class="api-fn">/packages/:name/publish</td><td class="api-type">POST</td><td class="api-desc">Publish a new version (auth required)</td></tr><tr><td class="api-fn">/auth/register</td><td class="api-type">POST</td><td class="api-desc">Create account</td></tr><tr><td class="api-fn">/auth/login</td><td class="api-type">POST</td><td class="api-desc">Get JWT token</td></tr><tr><td class="api-fn">/stats</td><td class="api-type">GET</td><td class="api-desc">Registry stats</td></tr><tr><td class="api-fn">/health</td><td class="api-type">GET</td><td class="api-desc">Server health</td></tr></tbody></table></div></div>
+
+    <div class="page" id="page-spec"><div class="breadcrumb">Reference <span>›</span> Protocol Spec</div><div class="page-hero"><div class="eyebrow">// Reference</div><h1>Protocol Spec</h1><p>The full MORP specification lives in <code>spec/PROTOCOL.md</code> in the repository.</p></div><div class="doc-section"><div class="callout callout-info"><div class="callout-label">Sections</div>1. Terminology · 2. Manifest · 3. Lifecycle · 4. Events · 5. Player · 6. State · 7. Exports · 8. Callbacks · 9. Scheduler · 10. Logging · 11. Signing · 12. Entity · 13. Vehicle · 14. Ped · 15. Compliance · 16. Versioning</div></div></div>
+
+    <div class="page" id="page-compat"><div class="breadcrumb">Reference <span>›</span> Compatibility</div><div class="page-hero"><div class="eyebrow">// Reference</div><h1>Compatibility</h1></div><div class="doc-section"><table class="api-table"><thead><tr><th>Module</th><th>Lua Adapter</th><th>TS Adapter</th><th>Spec</th></tr></thead><tbody><tr><td>Lifecycle</td><td>✓ 0.1</td><td>✓ 0.1</td><td>✓ 0.1</td></tr><tr><td>Events</td><td>✓ 0.1</td><td>✓ 0.1</td><td>✓ 0.1</td></tr><tr><td>Player</td><td>✓ 0.1</td><td>✓ 0.1</td><td>✓ 0.1</td></tr><tr><td>State / KV</td><td>✓ 0.1</td><td>✓ 0.1</td><td>✓ 0.1</td></tr><tr><td>Exports</td><td>✓ 0.1</td><td>✓ 0.1</td><td>✓ 0.1</td></tr><tr><td>Callbacks</td><td>✓ 0.1</td><td>✓ 0.1</td><td>✓ 0.1</td></tr><tr><td>Scheduler</td><td>✓ 0.1</td><td>✓ 0.1</td><td>✓ 0.1</td></tr><tr><td>Entity API</td><td>✓ 0.2</td><td>✓ 0.2</td><td>✓ 0.2</td></tr><tr><td>Vehicle API</td><td>✓ 0.2</td><td>✓ 0.2</td><td>✓ 0.2</td></tr><tr><td>Ped API</td><td>✓ 0.2</td><td>✓ 0.2</td><td>✓ 0.2</td></tr><tr><td>Signing</td><td>partial 0.2</td><td>partial 0.2</td><td>✓ 0.2</td></tr><tr><td>Registry</td><td>—</td><td>—</td><td>planned 0.3</td></tr></tbody></table></div></div>
+
+  </main>
+</div>
+
+<script>
+// ─────────────────────────────────────────
+// NAVIGATION
+// ─────────────────────────────────────────
+
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+  const target = document.getElementById(`page-${page}`);
+  if (target) {
+    target.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // Animate sections
+    target.querySelectorAll('.doc-section').forEach((s, i) => {
+      s.classList.remove('visible');
+      setTimeout(() => s.classList.add('visible'), 60 + i * 80);
+    });
+  }
+
+  document.querySelectorAll('.nav-item').forEach(item => {
+    if (item.getAttribute('onclick')?.includes(`'${page}'`)) {
+      item.classList.add('active');
+      item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  });
+}
+
+// Animate initial sections
+document.querySelectorAll('#page-introduction .doc-section').forEach((s, i) => {
+  setTimeout(() => s.classList.add('visible'), 200 + i * 100);
+});
+
+// ─────────────────────────────────────────
+// SEARCH
+// ─────────────────────────────────────────
+
+const searchIndex = [
+  { title: 'Introduction', page: 'introduction', text: 'what is morp protocol portability' },
+  { title: 'Quick Start', page: 'quickstart', text: 'install init scaffold resource begin' },
+  { title: 'Installation', page: 'installation', text: 'fivem server ensure morp-core cfg' },
+  { title: 'Events — Lifecycle', page: 'events', text: 'playerConnect playerDisconnect start stop clientReady' },
+  { title: 'Events — Network', page: 'events', text: 'emit emitServer emitClient emitAllClients on off' },
+  { title: 'Player API', page: 'player', text: 'getName getId getPing getIdentifiers kick getAll getCoords getPed' },
+  { title: 'State / KV', page: 'state', text: 'state set get delete player entity GlobalState' },
+  { title: 'Exports', page: 'exports', text: 'export import cross resource function' },
+  { title: 'Callbacks', page: 'callbacks', text: 'callback register trigger async request response' },
+  { title: 'Scheduler', page: 'scheduler', text: 'every after nextTick cancel timer interval' },
+  { title: 'Entity API', page: 'entity', text: 'create delete coords heading velocity attach detach netId owner loadModel' },
+  { title: 'Vehicle API', page: 'vehicle', text: 'spawn repair explode fuel engine speed plate color neon doors tyres' },
+  { title: 'Ped API', page: 'ped', text: 'spawn npc health armour weapon task animation follow combat' },
+  { title: 'CLI Reference', page: 'cli', text: 'init validate build keygen sign verify login publish install search dev' },
+  { title: 'Resource Signing', page: 'signing', text: 'ed25519 keygen sign verify private public key morp.sig' },
+  { title: 'Dev Server', page: 'dev', text: 'dev hot reload sse events watcher port status' },
+  { title: 'Registry Overview', page: 'registry', text: 'npm package registry self-host sqlite storage' },
+  { title: 'Publishing', page: 'publish', text: 'publish upload version login token' },
+  { title: 'Registry API', page: 'registry-api', text: 'rest api packages download stats health auth' },
+  { title: 'Protocol Spec', page: 'spec', text: 'specification sections compliance terminology manifest' },
+  { title: 'Compatibility', page: 'compat', text: 'compatibility modules versions lua typescript adapter' },
+  { title: 'Changelog', page: 'changelog', text: 'v0.2 v0.1 new features release' },
+];
+
+const searchInput   = document.getElementById('searchInput');
+const searchResults = document.getElementById('searchResults');
+
+searchInput.addEventListener('input', () => {
+  const q = searchInput.value.toLowerCase().trim();
+  if (!q) { searchResults.classList.remove('visible'); return; }
+
+  const results = searchIndex.filter(item =>
+    item.title.toLowerCase().includes(q) || item.text.toLowerCase().includes(q)
+  ).slice(0, 8);
+
+  if (!results.length) { searchResults.classList.remove('visible'); return; }
+
+  searchResults.innerHTML = results.map(r => `
+    <div class="search-result-item" onclick="navigate('${r.page}'); searchInput.value=''; searchResults.classList.remove('visible');">
+      <div class="sr-title">${highlight(r.title, q)}</div>
+      <div class="sr-path">${r.page}</div>
+    </div>
+  `).join('');
+
+  searchResults.classList.add('visible');
+});
+
+function highlight(str, q) {
+  const idx = str.toLowerCase().indexOf(q);
+  if (idx === -1) return str;
+  return str.slice(0, idx) + `<span class="sr-match">${str.slice(idx, idx + q.length)}</span>` + str.slice(idx + q.length);
+}
+
+document.addEventListener('click', e => {
+  if (!searchResults.contains(e.target) && e.target !== searchInput) {
+    searchResults.classList.remove('visible');
+  }
+});
+
+searchInput.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { searchResults.classList.remove('visible'); searchInput.value = ''; }
+});
+
+// ─────────────────────────────────────────
+// COPY CODE
+// ─────────────────────────────────────────
+
+function copyCode(btn) {
+  const pre = btn.closest('.code-block').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = 'copied';
+    setTimeout(() => btn.textContent = orig, 1500);
+  });
+}
+
+// ─────────────────────────────────────────
+// KEYBOARD SHORTCUTS
+// ─────────────────────────────────────────
+
+document.addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    e.preventDefault();
+    searchInput.focus();
+  }
+});
+</script>
+
+</body>
+</html>
